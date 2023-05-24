@@ -1,7 +1,10 @@
 const express = require('express');
-const router = express.Router();
+const multer = require('multer');
 const revenueController = require('../controllers/revenueController')
 
-router.post('/', revenueController.generateChatResponse)
+const router = express.Router();
+const upload = multer({ dest: 'uploads/' });
+
+router.post('/', upload.single('file'), revenueController.generateInsights)
 
 module.exports = router
