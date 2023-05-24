@@ -1,0 +1,59 @@
+/*
+
+
+import express from 'express';
+import multer from 'multer';
+import { Configuration, OpenAIApi } from 'openai';
+import dotenv from 'dotenv';
+import fs from 'fs';
+
+const app = express();
+const upload = multer({ dest: 'uploads/' });
+dotenv.config();
+
+const configuration = new Configuration({
+  apiKey: process.env.OPENAI_API_KEY,
+});
+const openai = new OpenAIApi(configuration);
+
+app.use(express.json());
+
+app.post('/chat', upload.single('file'), async (req, res) => {
+  const prompt = req.body.prompt;
+  const file = req.file;
+
+  if (!file) {
+    return res.status(400).json({ error: 'No file provided' });
+  }
+
+  const fileContent = fs.readFileSync(file.path, 'utf-8');
+  fs.unlinkSync(file.path); // Delete the uploaded file
+
+  const combinedPrompt = `${prompt}\nFile Content: ${fileContent}`;
+  const insights = await generateInsights(combinedPrompt);
+
+  res.status(200).json({ insights });
+});
+
+async function generateInsights(prompt) {
+  const response = await openai.createCompletion({
+    model: 'davinci',
+    prompt,
+    max_tokens: 100,
+    temperature: 0.5,
+    n: 1,
+    stop: '\n',
+  });
+
+  const generatedText = response.data.choices[0].text.trim();
+  return generatedText;
+}
+
+const PORT = 3000;
+app.listen(PORT, () => {
+  console.log(`Server is listening on port ${PORT}`);
+});
+
+
+
+*/
