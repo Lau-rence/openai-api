@@ -8,7 +8,7 @@ const app = express();
 app.use(bodyParser.json());
 dotenv.config();
 
-app.use('/generate-revenue-insight', revenueInsightRoutes);
+app.use('/generate-revenue-activity-insight', revenueInsightRoutes);
 
 app.listen(process.env.PORT, () => {
   console.log('Server is listening on port ' + process.env.PORT);

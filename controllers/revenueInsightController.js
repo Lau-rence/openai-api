@@ -1,6 +1,6 @@
 const { Configuration, OpenAIApi } = require('openai');
 const dotenv = require('dotenv');
-const xlsx = require('xlsx'); //Can read CVS too
+const csv = require('csv-parser');
 const fs = require('fs');
 
 dotenv.config();
@@ -21,25 +21,24 @@ async function generateInsights(req, res) {
 
   const insights = [];
 
-  const workbook = xlsx.readFile(file.path);
-  const sheetName = workbook.SheetNames[0];
-  const worksheet = workbook.Sheets[sheetName];
-  const jsonData = xlsx.utils.sheet_to_json(worksheet);
-
-  const columnHeaders = Object.keys(jsonData[0]).join(', ');
-  insights.push(columnHeaders);
-
-  jsonData.forEach((row) => {
-    // Process each row of the XLSX or CSV file
+  fs.createReadStream(file.path)
+  .pipe(csv())
+  .on('headers', (headerList) => {
+    // Process the headers of the CSV file
+    const headers = headerList.join(', ');
+    insights.push(headers);
+  })
+  .on('data', (row) => {
+    // Process each row of the CSV file
     const rowData = Object.values(row).join(', ');
     insights.push(rowData);
+  })
+  .on('end', async () => {
+    fs.unlinkSync(file.path); // Delete the uploaded file
+    const combinedPrompt = prompt + "\nFile Content:\n" + insights.join('\n');
+    const generatedInsights = await generateInsightsHelper(combinedPrompt);
+    res.status(200).json({insight: generatedInsights });
   });
-
-  fs.unlinkSync(file.path); // Delete the uploaded file
-
-  const combinedPrompt = prompt + "\nFile Content:\n" + insights.join('\n');
-  const generatedInsights = await generateInsightsHelper(combinedPrompt);
-  res.status(200).json({ insights: generatedInsights});
 }
 
 async function generateInsightsHelper(prompt) {
@@ -56,6 +55,8 @@ async function generateInsightsHelper(prompt) {
   const generatedText = response.data;
   return generatedText;
 }
+
+
 
 module.exports = {
   generateInsights,
