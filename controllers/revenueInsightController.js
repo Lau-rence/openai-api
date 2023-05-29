@@ -12,7 +12,7 @@ const configuration = new Configuration({
 const openai = new OpenAIApi(configuration);
 
 async function generateInsights(req, res) {
-  const prompt = "Make a revenue activity insight to this data set ";
+  const prompt = "Generate a revenue activity insight by category to the given data set.";
   const file = req.file;
 
   if (!file) {
@@ -26,8 +26,11 @@ async function generateInsights(req, res) {
   const worksheet = workbook.Sheets[sheetName];
   const jsonData = xlsx.utils.sheet_to_json(worksheet);
 
+  const columnHeaders = Object.keys(jsonData[0]).join(', ');
+  insights.push(columnHeaders);
+
   jsonData.forEach((row) => {
-    // Process each row of the XLSX file
+    // Process each row of the XLSX or CSV file
     const rowData = Object.values(row).join(', ');
     insights.push(rowData);
   });
@@ -36,7 +39,7 @@ async function generateInsights(req, res) {
 
   const combinedPrompt = prompt + "\nFile Content:\n" + insights.join('\n');
   const generatedInsights = await generateInsightsHelper(combinedPrompt);
-  res.status(200).json({ insights: generatedInsights });
+  res.status(200).json({ insights: generatedInsights});
 }
 
 async function generateInsightsHelper(prompt) {
@@ -50,7 +53,7 @@ async function generateInsightsHelper(prompt) {
     max_tokens: 1500,
   });
 
-  const generatedText = response.data.choices[0].message;
+  const generatedText = response.data;
   return generatedText;
 }
 
